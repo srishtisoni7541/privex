@@ -8,7 +8,6 @@ import { ToastContainer } from "react-toastify";
 import UserProfile from "./components/Profile";
 import Dashboard from "./components/Dashboard";
 import EditProfile from "./components/EditProfile";
-import { Search } from "lucide-react";
 import HomeFeed from "./components/HomeFeed";
 import CreatePost from "./components/CreatePost";
 import Searchbar from './components/Search';

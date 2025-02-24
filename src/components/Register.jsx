@@ -194,7 +194,7 @@ const Register = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-cover bg-blue-100 px-4 bg-[url(https://images.unsplash.com/photo-1589264110781-1ebfa05f901e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fGxpZ2h0JTIwYmx1ZSUyMGJhY2tncm91bmQlMjBpbWd8ZW58MHx8MHx8fDA%3D)] ">
-      <div className="w-full max-w-3xl p-6 rounded-md shadow-2xl flex flex-col md:flex-row bg-white/10 backdrop-blur-lg gap-6">
+      <div className="w-full max-w-3xl p-6 rounded-md shadow-2xl flex flex-col md:flex-row  gap-6">
         {/* Left Section (Logo & Tagline) */}
         <div className="w-full md:w-1/2 flex flex-col items-center text-center">
           <h1 className="text-6xl md:text-9xl text-white font-bold">ₚᵣᵢᵥₑₓ</h1>
@@ -204,7 +204,7 @@ const Register = () => {
         </div>
 
         {/* Right Section (Register Form) */}
-        <div className="w-full md:w-1/2 p-6 bg-gray-900/80 rounded-md shadow-lg">
+        <div className="w-full md:w-1/2 p-6 rounded-md shadow-lg">
           <h2 className="text-2xl font-bold text-center text-white mb-4">Register</h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -214,7 +214,7 @@ const Register = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-600 rounded mt-1 focus:ring-2 focus:ring-blue-400"
+                className="w-full p-2 border border-gray-100 rounded mt-1 focus:ring-2 focus:ring-blue-400"
                 required
                 minLength={3}
                 maxLength={20}
@@ -227,7 +227,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-600 rounded mt-1 focus:ring-2 focus:ring-blue-400"
+                className="w-full p-2 border border-gray-100 rounded mt-1 focus:ring-2 focus:ring-blue-400"
                 required
                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$"
               />
@@ -239,7 +239,7 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full p-2 border border-gray-600 rounded mt-1 focus:ring-2 focus:ring-blue-400"
+                className="w-full p-2 border border-gray-100 rounded mt-1 focus:ring-2 focus:ring-blue-400"
                 required
                 minLength={8}
               />
