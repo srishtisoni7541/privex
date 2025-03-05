@@ -45,6 +45,7 @@ const CreatePost = () => {
           "Content-Type": "multipart/form-data"
         },
       });
+      console.log(response);
       toast.success("Post Created Successfully! ✅");
   
       // Thoda delay do taaki toast dikhe aur fir redirect ho

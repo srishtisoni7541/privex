@@ -38,9 +38,10 @@ const UserProfile = () => {
     if (!window.confirm("Are you sure you want to delete your account?")) return;
   
     try {
-      await axiosInstance.delete(`/delete-account/${user._id}`);
+       const response =await axiosInstance.delete(`/users/delete-account/${user._id}`);
+       console.log("deletiion record:",response.data);
       alert("Your account has been deleted.");
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Account deletion failed:", error);
       alert("Failed to delete account. Please try again.");
@@ -52,7 +53,7 @@ const UserProfile = () => {
     const fetchUser = async () => {
       try {
         const response = await axiosInstance.get("/users/profile");
-        console.log("response:",response.data);
+        console.log("response from backend:",response);
         setUser(response.data);
       } catch (error) {
         console.error("User fetch failed:", error);
@@ -142,10 +143,10 @@ const UserProfile = () => {
           user.posts.map((post, i) => (
             <img
               key={i}
-              src={getImageSrc(post.image)}
+              src={post.image}
               alt={`Post ${i + 1}`}
-              className="w-full h-36 object-cover rounded-md"
-            />
+              className="w-full h-36 object-cover bg-white rounded-md"
+            />  
           ))
         ) : (
           <p className="col-span-3 text-center text-gray-500">
@@ -185,3 +186,5 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
+
+
