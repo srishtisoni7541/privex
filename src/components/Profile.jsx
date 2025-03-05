@@ -1,7 +1,4 @@
 
-
-
-import { Buffer } from "buffer";  // ✅ Import Buffer Fix
 import { Bookmark, Grid, Heart, MoreVertical, X } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../utils/axios";
@@ -11,35 +8,41 @@ import EditProfile from "./EditProfile"; // ✅ Import EditProfile component
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
+  console.log(user);
   const [activeTab, setActiveTab] = useState("posts");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const navigate = useNavigate();
 
   // ✅ Fix Buffer Not Defined Error
-  const getImageSrc = (bufferData) => {
-    if (!bufferData) return "https://via.placeholder.com/150";
-    const base64String = Buffer.from(bufferData).toString("base64");
+  const getImageSrc = (base64String) => {
+    if (!base64String) return "https://via.placeholder.com/150"; // Default image
     return `data:image/jpeg;base64,${base64String}`;
   };
-  const handleLogout = async ()=>{
-    const response = await axiosInstance.get('/users/logout');
-    console.log(response);
-    navigate('/login');
-  }
+
+  const handleLogout = async () => {
+    try {
+      const response = await axiosInstance.get("/users/logout");
+      console.log(response);
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Failed to logout. Please try again.");
+    }
+  };
+
   const handleDeleteAccount = async () => {
-    console.log(user);
     if (!user || !user._id) {
       console.error("User ID is missing!");
       alert("Error: User ID not found.");
       return;
     }
-  
+
     if (!window.confirm("Are you sure you want to delete your account?")) return;
-  
+
     try {
-       const response =await axiosInstance.delete(`/users/delete-account/${user._id}`);
-       console.log("deletiion record:",response.data);
+      const response = await axiosInstance.delete(`/users/delete-account/${user._id}`);
+      console.log("Deletion record:", response.data);
       alert("Your account has been deleted.");
       navigate("/");
     } catch (error) {
@@ -47,13 +50,12 @@ const UserProfile = () => {
       alert("Failed to delete account. Please try again.");
     }
   };
-  
-  
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await axiosInstance.get("/users/profile");
-        console.log("response from backend:",response);
+        console.log("Response from backend:", response);
         setUser(response.data);
       } catch (error) {
         console.error("User fetch failed:", error);
@@ -61,27 +63,22 @@ const UserProfile = () => {
       }
     };
     fetchUser();
-  }, []);
+  }, [navigate]);
 
   if (!user) {
-    return (
-      <div className="text-center mt-10 text-xl font-semibold">Loading...</div>
-    );
+    return <div className="text-center mt-10 text-xl font-semibold">Loading...</div>;
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-2 sm:p-4  min-h-screen relative">
+    <div className="max-w-3xl mx-auto p-2 sm:p-4 min-h-screen relative">
       <div className="bg-white shadow-md rounded-lg p-4 flex flex-col items-center relative">
-        {/* ✅ Profile Image Fix */}
         <img
           src={getImageSrc(user.profilePic)}
           alt="Profile"
           className="w-24 h-24 rounded-full object-cover border-4 border-gray-300"
         />
         <h2 className="text-lg font-bold mt-2">{user.username}</h2>
-        <p className="text-sm text-gray-600">
-          {user.bio || "No bio available."}
-        </p>
+        <p className="text-sm text-gray-600">{user.bio || "No bio available."}</p>
         <div className="flex justify-between w-full mt-3 px-4 text-center">
           <span>
             <strong>{user.posts?.length || 0}</strong> Posts
@@ -110,14 +107,14 @@ const UserProfile = () => {
             <button onClick={handleLogout} className="block px-4 py-2 hover:bg-gray-100">
               Logout
             </button>
-            <button  onClick={handleDeleteAccount} className="block px-4 py-2 text-red-500 hover:bg-red-100">
+            <button onClick={handleDeleteAccount} className="block px-4 py-2 text-red-500 hover:bg-red-100">
               Delete Account
             </button>
           </div>
         )}
       </div>
 
-      <div className="flex justify-around border-b  pb-2 mt-4">
+      <div className="flex justify-around border-b pb-2 mt-4">
         {[
           { name: "Posts", value: "posts", icon: <Grid /> },
           { name: "Liked", value: "likedPosts", icon: <Heart /> },
@@ -127,9 +124,7 @@ const UserProfile = () => {
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
             className={`flex items-center gap-1 px-3 py-1 text-sm font-medium ${
-              activeTab === tab.value
-                ? "border-b-2 border-gray-300 text-white"
-                : "text-gray-500"
+              activeTab === tab.value ? "border-b-2 border-gray-300 text-white" : "text-gray-500"
             }`}
           >
             {tab.icon} {tab.name}
@@ -137,7 +132,6 @@ const UserProfile = () => {
         ))}
       </div>
 
-      {/* ✅ Buffer Image Fix for Posts */}
       <div className="grid grid-cols-3 gap-2 mt-4">
         {activeTab === "posts" && user.posts?.length > 0 ? (
           user.posts.map((post, i) => (
@@ -146,14 +140,13 @@ const UserProfile = () => {
               src={post.image}
               alt={`Post ${i + 1}`}
               className="w-full h-36 object-cover bg-white rounded-md"
-            />  
+            />
           ))
         ) : (
-          <p className="col-span-3 text-center text-gray-500">
-            No {activeTab} available.
-          </p>
+          <p className="col-span-3 text-center text-gray-500">No {activeTab} available.</p>
         )}
       </div>
+
       <AnimatePresence>
         {editProfileOpen && (
           <motion.div
@@ -166,17 +159,11 @@ const UserProfile = () => {
             <div className="w-full sm:w-[500px] lg:w-[600px] bg-white shadow-2xl p-5 rounded-lg h-[90vh] sm:h-auto sm:max-h-[80vh] flex flex-col gap-4 overflow-y-auto">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold">Edit Profile</h2>
-                <button
-                  onClick={() => setEditProfileOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
+                <button onClick={() => setEditProfileOpen(false)} className="text-gray-500 hover:text-gray-700">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              <EditProfile
-                user={user}
-                onClose={() => setEditProfileOpen(false)}
-              />
+              <EditProfile user={user} onClose={() => setEditProfileOpen(false)} />
             </div>
           </motion.div>
         )}
@@ -186,5 +173,3 @@ const UserProfile = () => {
 };
 
 export default UserProfile;
-
-

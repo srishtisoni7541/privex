@@ -11,6 +11,7 @@ import EditProfile from "./components/EditProfile";
 import HomeFeed from "./components/HomeFeed";
 import CreatePost from "./components/CreatePost";
 import Searchbar from './components/Search';
+import UserDetailPage from "./components/userDetailPage";
 
 const App = () => {
   return (
@@ -26,11 +27,13 @@ const App = () => {
         {/* Profile */}
         <Route path="/profile" element={<UserProfile/>} />
         <Route path="/update-profile" element={<EditProfile />} />
+        <Route path="/user/:id" element={<UserDetailPage />} />
 
         {/* Dashboard with Nested Routes */}
         <Route path="/dashboard" element={<Dashboard />}>
           <Route path="home"  element={<HomeFeed />} />
           <Route path="search" element={<Searchbar />} />
+        
           <Route path="create" element={<CreatePost />} />
           <Route path="profile" element={<UserProfile />} />
         </Route>

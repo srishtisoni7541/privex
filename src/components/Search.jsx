@@ -1,11 +1,19 @@
 
+
+
+
+
+
 import React, { useState, useEffect } from "react";
 import { Search as SearchIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axiosInstance from "../../utils/axios";
 
 const SearchComponent = () => {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const bufferToBase64 = (buffer) => {
     if (!buffer || !buffer.data) return "";
     const uint8Array = new Uint8Array(buffer.data);
@@ -15,9 +23,7 @@ const SearchComponent = () => {
     );
     return `data:image/png;base64,${btoa(binaryString)}`;
   };
-  
 
-  // Fetch users from backend
   useEffect(() => {
     const getData = async () => {
       try {
@@ -27,18 +33,20 @@ const SearchComponent = () => {
         console.error("Failed to fetch users:", error);
       }
     };
-console.log(users);
     getData();
   }, []);
 
-  // Filter users based on query
   const filteredUsers = users.filter((user) =>
     user.username?.toLowerCase().includes(query.toLowerCase())
   );
 
+  // Function to navigate to user detail page
+  const handleUserClick = (userId) => {
+    navigate(`/user/${userId}`); // Navigate to the user details page
+  };
+
   return (
     <div className="max-w-lg mx-auto p-4">
-      {/* Search Bar */}
       <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-500 bg-white">
         <SearchIcon className="w-5 h-5 text-gray-500" />
         <input
@@ -50,25 +58,23 @@ console.log(users);
         />
       </div>
 
-      {/* Search Results */}
       {query && (
         <div className="bg-white mt-2 p-3 rounded-lg shadow-md">
           {filteredUsers.length > 0 ? (
-            filteredUsers.map((user, index) => (
-              <div>
+            filteredUsers.map((user) => (
+              <div key={user._id}>
                 <div
-                key={index}
-                className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
-              >
-                <img
-                  src={bufferToBase64(user.profilePic) || "https://via.placeholder.com/40"}
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <span>{user.username}</span>
-               
-              </div>
-              <h6 className="text-sm ml-14 mt-[-12px]">{user.bio}</h6>
+                  className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                  onClick={() => handleUserClick(user._id)} // Navigate on click
+                >
+                  <img
+                    src={bufferToBase64(user.profilePic) || "https://via.placeholder.com/40"}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span>{user.username}</span>
+                </div>
+                <h6 className="text-sm ml-14 mt-[-12px]">{user.bio}</h6>
               </div>
             ))
           ) : (
