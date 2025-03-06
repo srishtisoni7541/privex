@@ -24,7 +24,8 @@ const bufferToBase64 = (buffer) => {
 };
 
 const HomeFeed = () => {
-  const { posts: initialPosts, user = [] } = useOutletContext();
+  const { posts: initialPosts } = useOutletContext();
+
   const [posts, setPosts] = useState(initialPosts || []);
   const [likes, setLikes] = useState({});
   const [likeList, setLikeList] = useState([]);
@@ -51,21 +52,37 @@ const HomeFeed = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  const handleLike = async (postId) => {
-    if (!user[0]?._id) return;
 
-    try {
-      await axiosInstance.post(`/posts/like/${postId}`, {
-        userId: user[0]._id,
+const handleLike = async (postId) => {
+  if (!postId) {
+    console.error("❌ postId is missing!");
+    return;
+  }
+
+  console.log("👍 Sending like request for postId:", postId);
+
+  try {
+    const response = await axiosInstance.post(`/posts/like/${postId}`);
+
+    console.log("✅ Like success:", response.data);
+
+    if (response.data?.likesCount !== undefined) {
+      setPosts((prevPosts) => {
+        return prevPosts.map((post) => {
+          if (post._id === postId) {
+            console.log("Updating likes for post:", postId, "New Count:", response.data.likesCount);
+            return { ...post, likesCount: response.data.likesCount };
+          }
+          return post;
+        });
       });
-      setLikes((prev) => ({
-        ...prev,
-        [postId]: (prev[postId] || 0) + 1,
-      }));
-    } catch (error) {
-      console.error("Failed to like the post", error);
     }
-  };
+  } catch (error) {
+    console.error("❌ Failed to like the post", error.response?.data || error);
+  }
+};
+
+
   const handleDeletePost = async (postId) => {
     try {
       console.log("Deleting post with ID:", postId); // ✅ Check if ID is correct
@@ -147,15 +164,8 @@ const HomeFeed = () => {
                       <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                         💾 Save
                       </button>
-                      <button
-                        className="block px-4 py-2 text-red-600 hover:bg-gray-100 w-full text-left"
-                        onClick={() => handleDeletePost(post._id)}
-                        style={{
-                          display:
-                            post.user?._id === user[0]?._id ? "block" : "none",
-                        }}
-                      >
-                        🗑 Delete
+                      <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
+                        delete
                       </button>
                     </motion.div>
                   )}
@@ -180,7 +190,7 @@ const HomeFeed = () => {
                 className="flex items-center gap-1"
               >
                 <Heart className="w-5 h-5 text-red-500" />
-                {likes[post._id] || post.likesCount || 0}
+                { post.likesCount || 0}
               </button>
               <button
                 className="hover:text-blue-500 flex items-center gap-1"
@@ -192,7 +202,6 @@ const HomeFeed = () => {
           </div>
         );
       })}
-
       <AnimatePresence>
         {likePanelOpen && (
           <motion.div
@@ -200,9 +209,9 @@ const HomeFeed = () => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed bottom-0 left-0 w-full h-[300px] bg-white shadow-2xl p-5 rounded-t-lg flex flex-col gap-4"
+            className="fixed bottom-0 left-0 w-full h-[300px] bg-white shadow-2xl p-5 rounded-t-lg flex flex-col gap-4 overflow-y-auto"
           >
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center border-b pb-2">
               <h2 className="text-lg font-bold">People who liked</h2>
               <button
                 onClick={() => setLikePanelOpen(false)}
@@ -211,6 +220,28 @@ const HomeFeed = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
+
+            {likeList.length > 0 ? (
+              likeList.map((user, index) => (
+                <div
+                  key={user._id || index} // Agar _id na mile toh index use karo
+                  className="flex items-center gap-3 p-2 border-b"
+                >
+                  <img
+                    src={
+                      user.profilePic
+                        ? bufferToBase64(user.profilePic)
+                        : "https://via.placeholder.com/50"
+                    }
+                    alt={user.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <p className="font-medium">{user.username}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-5">No likes yet</p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
