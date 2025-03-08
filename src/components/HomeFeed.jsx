@@ -12,6 +12,10 @@ const formatDate = (dateString) => {
     hour12: true,
   });
 };
+console.log("h");
+const loggedInUser = JSON.parse(localStorage.getItem("loggedIn-user")) || {};
+console.log(loggedInUser?.user);
+
 
 // ✅ Fix: Convert Buffer to Base64 Safely
 const bufferToBase64 = (buffer) => {
@@ -52,36 +56,42 @@ const HomeFeed = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-
-const handleLike = async (postId) => {
-  if (!postId) {
-    console.error("❌ postId is missing!");
-    return;
-  }
-
-  console.log("👍 Sending like request for postId:", postId);
-
-  try {
-    const response = await axiosInstance.post(`/posts/like/${postId}`);
-
-    console.log("✅ Like success:", response.data);
-
-    if (response.data?.likesCount !== undefined) {
-      setPosts((prevPosts) => {
-        return prevPosts.map((post) => {
-          if (post._id === postId) {
-            console.log("Updating likes for post:", postId, "New Count:", response.data.likesCount);
-            return { ...post, likesCount: response.data.likesCount };
-          }
-          return post;
-        });
-      });
+  const handleLike = async (postId) => {
+    if (!postId) {
+      console.error("❌ postId is missing!");
+      return;
     }
-  } catch (error) {
-    console.error("❌ Failed to like the post", error.response?.data || error);
-  }
-};
 
+    console.log("👍 Sending like request for postId:", postId);
+
+    try {
+      const response = await axiosInstance.post(`/posts/like/${postId}`);
+
+      console.log("✅ Like success:", response.data);
+
+      if (response.data?.likesCount !== undefined) {
+        setPosts((prevPosts) => {
+          return prevPosts.map((post) => {
+            if (post._id === postId) {
+              console.log(
+                "Updating likes for post:",
+                postId,
+                "New Count:",
+                response.data.likesCount
+              );
+              return { ...post, likesCount: response.data.likesCount };
+            }
+            return post;
+          });
+        });
+      }
+    } catch (error) {
+      console.error(
+        "❌ Failed to like the post",
+        error.response?.data || error
+      );
+    }
+  };
 
   const handleDeletePost = async (postId) => {
     try {
@@ -164,9 +174,14 @@ const handleLike = async (postId) => {
                       <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                         💾 Save
                       </button>
-                      <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
-                        delete
-                      </button>
+                      {loggedInUser?._id === post.user?._id && (
+                        <button
+                          onClick={() => handleDeletePost(post._id)}
+                          className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                        >
+                          🗑 Delete
+                        </button>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -190,7 +205,7 @@ const handleLike = async (postId) => {
                 className="flex items-center gap-1"
               >
                 <Heart className="w-5 h-5 text-red-500" />
-                { post.likesCount || 0}
+                {post.likesCount || 0}
               </button>
               <button
                 className="hover:text-blue-500 flex items-center gap-1"

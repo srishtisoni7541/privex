@@ -27,7 +27,7 @@ const Login = () => {
 
       // Save tokens to localStorage
       localStorage.setItem("accessToken", response.data.accessToken);
-      // localStorage.setItem("refreshToken", response.data.refreshToken);
+      localStorage.setItem("loggedIn-user", JSON.stringify(userData)); 
 
       // Success Toast
       toast.success(response.data.message || "Login Successful!", {
@@ -97,7 +97,7 @@ const Login = () => {
           </button>
         </form>
         <p className="text-sm text-gray-300 text-center mt-4">
-          Don't have an account? <a href="#" className="text-blue-400 hover:underline">Sign up</a>
+          Don't have an account? <a href="/" className="text-blue-400 hover:underline">Sign up</a>
         </p>
       </div>
     </div>

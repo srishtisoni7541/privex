@@ -8,13 +8,12 @@ import EditProfile from "./EditProfile"; // ✅ Import EditProfile component
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
-  console.log(user);
   const [activeTab, setActiveTab] = useState("posts");
   const [menuOpen, setMenuOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Fix Buffer Not Defined Error
+
   const getImageSrc = (base64String) => {
     if (!base64String) return "https://via.placeholder.com/150"; // Default image
     return `data:image/jpeg;base64,${base64String}`;
@@ -31,6 +30,7 @@ const UserProfile = () => {
     }
   };
 
+  
   const handleDeleteAccount = async () => {
     if (!user || !user._id) {
       console.error("User ID is missing!");
@@ -51,22 +51,32 @@ const UserProfile = () => {
     }
   };
 
+
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await axiosInstance.get("/users/profile");
-        console.log("Response from backend:", response);
+        console.log("Response from backend:", response.data);
         setUser(response.data);
+        console.log("Updated User State:", user); 
       } catch (error) {
         console.error("User fetch failed:", error);
         navigate("/login");
       }
     };
     fetchUser();
-  }, [navigate]);
+}, [user]); 
+
 
   if (!user) {
-    return <div className="text-center mt-10 text-xl font-semibold">Loading...</div>;
+
+      return (
+        <div className="flex items-center absolute justify-center min-h-screen">
+          <div className="w-12 h-12 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+        </div>
+      ); 
+    
   }
 
   return (

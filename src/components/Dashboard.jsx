@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, PlusSquare, User } from "lucide-react";
@@ -9,6 +8,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [posts, setPosts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,18 +16,18 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // const userResponse = await axiosInstance.get("/users/allUsers");
+        const userResponse = await axiosInstance.get("/users/allUsers");
         const postsResponse = await axiosInstance.get("/posts/allposts", {
-          responseType: "arraybuffer", // API se buffer format me data le rahe hain
+          responseType: "arraybuffer",
         });
 
-      
         const decoder = new TextDecoder("utf-8");
         const jsonString = decoder.decode(new Uint8Array(postsResponse.data));
         const parsedData = JSON.parse(jsonString);
 
         console.log("Parsed Posts:", parsedData);
         setPosts(parsedData.posts);
+        setUsers(userResponse.data);
       } catch (err) {
         setError("Error fetching data");
       } finally {
@@ -38,10 +38,9 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // ✅ Default Home par navigate karne ke liye
   useEffect(() => {
     if (location.pathname === "/dashboard") {
-      navigate("/dashboard/home"); // Home page par redirect
+      navigate("/dashboard/home");
     }
   }, [location.pathname, navigate]);
 
@@ -50,46 +49,52 @@ const Dashboard = () => {
   if (error)
     return <div className="text-center mt-10 text-red-500">{error}</div>;
 
+  const tabs = [
+    { name: "Home", path: "/dashboard/home", icon: Home },
+    { name: "Search", path: "/dashboard/search", icon: Search },
+    { name: "Create", path: "/dashboard/create", icon: PlusSquare },
+    { name: "Profile", path: "/dashboard/profile", icon: User },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-[url(https://images.unsplash.com/photo-1589264110781-1ebfa05f901e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fGxpZ2h0JTIwYmx1ZSUyMGJhY2tncm91bmQlMjBpbWd8ZW58MHx8MHx8fDA%3D)] bg-cover">
-      {/* Sidebar */}
-      <div className="hidden md:flex flex-col w-64 p-4 bg-white shadow-md min-h-screen">
-        {[
-          {
-            name: "Home",
-            path: "/dashboard/home",
-            icon: <Home className="w-6 h-6" />,
-          },
-          {
-            name: "Search",
-            path: "/dashboard/search",
-            icon: <Search className="w-6 h-6" />,
-          },
-          {
-            name: "Create",
-            path: "/dashboard/create",
-            icon: <PlusSquare className="w-6 h-6" />,
-          },
-          {
-            name: "Profile",
-            path: "/dashboard/profile",
-            icon: <User className="w-6 h-6" />,
-          },
-        ].map((tab) => (
+    <div className="flex flex-col md:flex-row min-h-screen bg-[url(https://images.unsplash.com/photo-1589264110781-1ebfa05f901e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fGxpZ2h0JTIwYmx1ZSUyMGJhY2tncm91bmQlMjBpbWd8ZW58MHx8MHx8fDA%3D)] bg-cover bg-gray-100">
+      {/* Sidebar for Desktop */}
+      <div className="hidden md:flex flex-col w-64 p-5 bg-white shadow-lg min-h-screen">
+        {tabs.map((tab) => (
           <button
             key={tab.path}
             onClick={() => navigate(tab.path)}
-            className="flex items-center gap-3 p-3 rounded-md text-lg font-medium hover:bg-gray-200 text-gray-700"
+            className={`flex items-center gap-3 p-3 rounded-lg text-lg font-medium transition ${
+              location.pathname === tab.path
+                ? "bg-blue-500 text-white"
+                : "text-gray-700 hover:bg-gray-200"
+            }`}
           >
-            {tab.icon}
+            <tab.icon className="w-6 h-6" />
             {tab.name}
           </button>
         ))}
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow p-4 max-w-3xl mx-auto">
-        <Outlet context={{ posts }} />{" "}
+      <div className="flex-grow p-4 md:max-w-3xl mx-auto w-full">
+        <Outlet context={{ posts, users }} />
+      </div>
+
+      {/* ✅ Bottom Navbar for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white shadow-lg flex justify-around py-3 border-t border-gray-300">
+        {tabs.map((tab) => (
+          <button
+            key={tab.path}
+            onClick={() => navigate(tab.path)}
+            className={`flex flex-col items-center text-sm transition ${
+              location.pathname === tab.path ? "text-blue-500" : "text-gray-700"
+            }`}
+          >
+            <tab.icon className="w-6 h-6" />
+            <span>{tab.name}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
