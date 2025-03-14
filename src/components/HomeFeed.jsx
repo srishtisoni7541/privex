@@ -1,9 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+
+
+import React, { useState, useEffect, useRef } from "react";
 import { Heart, Eye, X, MoreVertical } from "lucide-react";
 import axiosInstance from "../../utils/axios";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom"; // Import useNavigate
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 
+// Format date function
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleTimeString("en-US", {
@@ -12,12 +16,14 @@ const formatDate = (dateString) => {
     hour12: true,
   });
 };
+
 console.log("h");
+
+// Retrieve logged-in user from localStorage
 const loggedInUser = JSON.parse(localStorage.getItem("loggedIn-user")) || {};
-console.log(loggedInUser?.user);
+console.log(loggedInUser.user?._id);
 
-
-// ✅ Fix: Convert Buffer to Base64 Safely
+// Helper function to convert buffer to Base64 safely
 const bufferToBase64 = (buffer) => {
   if (!buffer || !buffer.data) return "";
   const binary = new Uint8Array(buffer.data).reduce(
@@ -27,7 +33,15 @@ const bufferToBase64 = (buffer) => {
   return `data:image/png;base64,${btoa(binary)}`;
 };
 
+// Helper function to get profile picture URL (avoids useMemo inside a loop)
+const getProfilePic = (user) => {
+  return user?.profilePic?.data
+    ? bufferToBase64(user.profilePic)
+    : "https://via.placeholder.com/150";
+};
+
 const HomeFeed = () => {
+  const navigate = useNavigate(); // Initialize navigate here
   const { posts: initialPosts } = useOutletContext();
 
   const [posts, setPosts] = useState(initialPosts || []);
@@ -53,16 +67,15 @@ const HomeFeed = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
   const handleLike = async (postId) => {
     if (!postId) {
-      console.error("❌ postId is missing!");
+      console.error("postId is missing!");
       return;
     }
-
-    console.log("👍 Sending like request for postId:", postId);
 
     try {
       const response = await axiosInstance.post(`/posts/like/${postId}`);
@@ -70,24 +83,17 @@ const HomeFeed = () => {
       console.log("✅ Like success:", response.data);
 
       if (response.data?.likesCount !== undefined) {
-        setPosts((prevPosts) => {
-          return prevPosts.map((post) => {
-            if (post._id === postId) {
-              console.log(
-                "Updating likes for post:",
-                postId,
-                "New Count:",
-                response.data.likesCount
-              );
-              return { ...post, likesCount: response.data.likesCount };
-            }
-            return post;
-          });
-        });
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post._id === postId
+              ? { ...post, likesCount: response.data.likesCount }
+              : post
+          )
+        );
       }
     } catch (error) {
       console.error(
-        "❌ Failed to like the post",
+        "Failed to like the post",
         error.response?.data || error
       );
     }
@@ -95,14 +101,29 @@ const HomeFeed = () => {
 
   const handleDeletePost = async (postId) => {
     try {
-      console.log("Deleting post with ID:", postId); // ✅ Check if ID is correct
-      await axiosInstance.delete(`/posts/delete/${postId}`);
+      console.log("Deleting post with ID:", postId);
+      const response = await axiosInstance.delete(`/posts/delete/${postId}`);
+      console.log(response);
       setPosts((prev) => prev.filter((post) => post._id !== postId));
+
+      toast.success("Post successfully deleted!", {
+        position: "top-right",
+        autoClose: 2000, 
+      });
+
+      // Redirect to home after deletion
+      setTimeout(() => {
+        navigate("/dashboard/home"); // Redirect to home page
+      }, 2000);
     } catch (error) {
       console.error(
         "Error deleting post:",
         error.response?.data || error.message
       );
+      toast.error("Failed to delete post!", {
+        position: "top-right",
+        autoClose: 3000, // 3 seconds
+      });
     }
   };
 
@@ -124,12 +145,8 @@ const HomeFeed = () => {
   return (
     <div className="relative max-h-[700px] w-full shadow-xl overflow-y-auto flex flex-col gap-6 p-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg scrollbar-hide">
       {posts?.map((post) => {
-        // ✅ Fix: Ensure Safe UseMemo Dependency
-        const profilePic = useMemo(() => {
-          return post.user?.profilePic?.data
-            ? bufferToBase64(post.user.profilePic)
-            : "https://via.placeholder.com/150";
-        }, [post.user?.profilePic?.data]);
+        // Use the helper function instead of useMemo inside map
+        const profilePic = getProfilePic(post.user);
 
         return (
           <div
@@ -174,7 +191,7 @@ const HomeFeed = () => {
                       <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                         💾 Save
                       </button>
-                      {loggedInUser?._id === post.user?._id && (
+                      {loggedInUser?.user?._id === post.user?._id && (
                         <button
                           onClick={() => handleDeletePost(post._id)}
                           className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
@@ -265,3 +282,4 @@ const HomeFeed = () => {
 };
 
 export default HomeFeed;
+

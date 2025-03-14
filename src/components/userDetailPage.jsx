@@ -104,7 +104,8 @@ const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const loggedInUserId = localStorage.getItem("userId");
+  const loggedInUserData = JSON.parse(localStorage.getItem("loggedIn-user"));
+  const loggedInUserId = loggedInUserData.user?._id;
 
   const getImageSrc = (profilePic) => {
     if (!profilePic || !profilePic.data)
@@ -131,8 +132,6 @@ const UserDetailPage = () => {
     fetchUser();
   }, [id]);
 
- 
-
   const handleFollow = async () => {
     try {
       const response = await axiosInstance.post(`/users/follow/${id}`, {
@@ -158,7 +157,9 @@ const UserDetailPage = () => {
       </div>
     );
 
+
   const isFollowing = user?.followers?.includes(loggedInUserId);
+  console.log(isFollowing);
 
   return (
     <div className="w-full min-h-screen mx-auto p-4 text-white bg-[url(https://images.unsplash.com/photo-1589264110781-1ebfa05f901e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzJ8fGxpZ2h0JTIwYmx1ZSUyMGJhY2tncm91bmQlMjBpbWd8ZW58MHx8MHx8fDA%3D)] bg-cover overflow-auto flex flex-col items-center">
@@ -202,9 +203,10 @@ const UserDetailPage = () => {
           <>
             <button
               className={`px-4 py-2 rounded-lg w-full md:w-auto ${
-                isFollowing ? "bg-gray-500" : "bg-blue-500"
+                isFollowing ? "bg-gray-500 cursor-not-allowed" : "bg-blue-500"
               } text-white`}
               onClick={handleFollow}
+      
             >
               {isFollowing ? "Following" : "Follow"}
             </button>

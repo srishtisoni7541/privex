@@ -66,7 +66,7 @@ const UserProfile = () => {
       }
     };
     fetchUser();
-}, [user]); 
+}, []); 
 
 
   if (!user) {

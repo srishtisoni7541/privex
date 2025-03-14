@@ -21,11 +21,11 @@ const Login = () => {
         password,
       });
 
-      const userData = response.data; // Assuming user data is returned
-      console.log("data:", userData);
+      const userData = response.data; 
+    
 
 
-      // Save tokens to localStorage
+      
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("loggedIn-user", JSON.stringify(userData)); 
 

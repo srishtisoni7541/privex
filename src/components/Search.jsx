@@ -40,10 +40,13 @@ const SearchComponent = () => {
     user.username?.toLowerCase().includes(query.toLowerCase())
   );
 
-  // Function to navigate to user detail page
+  // // Function to navigate to user detail page
   const handleUserClick = (userId) => {
     navigate(`/user/${userId}`); // Navigate to the user details page
   };
+
+
+ 
 
   return (
     <div className="max-w-lg mx-auto p-4">
