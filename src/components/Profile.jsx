@@ -140,22 +140,6 @@ const UserProfile = () => {
           </button>
         ))}
       </div>
-
-      {/* <div className="grid grid-cols-3 gap-2 mt-4">
-        {activeTab === "posts" && user.posts?.length > 0 ? (
-          user.posts.map((post, i) => (
-            <img
-              key={i}
-              src={post.image}
-              alt={`Post ${i + 1}`}
-              className="w-full h-36 object-cover bg-white rounded-md"
-            />
-          ))
-        ) : (
-          <p className="col-span-3 text-center text-gray-500">No {activeTab} available.</p>
-        )}
-      </div> */}
-
 <div className="grid grid-cols-3 gap-2 mt-4">
   {activeTab === "posts" && user.posts?.length > 0 ? (
     user.posts.map((post, i) => (
