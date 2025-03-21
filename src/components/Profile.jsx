@@ -59,7 +59,6 @@ const UserProfile = () => {
         const response = await axiosInstance.get("/users/profile");
         console.log("Response from backend:", response.data);
         setUser(response.data);
-        console.log("Updated User State:", user); 
       } catch (error) {
         console.error("User fetch failed:", error);
         navigate("/login");

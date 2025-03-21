@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Heart, Eye, X, MoreVertical } from "lucide-react";
 import axiosInstance from "../../utils/axios";
-import { useOutletContext, useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom"; // Using useNavigate for redirection
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 
@@ -17,7 +17,6 @@ const formatDate = (dateString) => {
   });
 };
 
-console.log("h");
 
 // Retrieve logged-in user from localStorage
 const loggedInUser = JSON.parse(localStorage.getItem("loggedIn-user")) || {};
@@ -33,7 +32,7 @@ const bufferToBase64 = (buffer) => {
   return `data:image/png;base64,${btoa(binary)}`;
 };
 
-// Helper function to get profile picture URL (avoids useMemo inside a loop)
+// Helper function to get profile picture URL
 const getProfilePic = (user) => {
   return user?.profilePic?.data
     ? bufferToBase64(user.profilePic)
@@ -41,10 +40,8 @@ const getProfilePic = (user) => {
 };
 
 const HomeFeed = () => {
-  const navigate = useNavigate(); // Initialize navigate here
-  const { posts: initialPosts } = useOutletContext();
-
-  const [posts, setPosts] = useState(initialPosts || []);
+  const navigate = useNavigate(); // Initialize navigate
+  const [posts, setPosts] = useState([]);
   const [likes, setLikes] = useState({});
   const [likeList, setLikeList] = useState([]);
   const [likePanelOpen, setLikePanelOpen] = useState(false);
@@ -52,17 +49,30 @@ const HomeFeed = () => {
   const [menuOpen, setMenuOpen] = useState(null);
   const menuRef = useRef(null);
 
+  // Fetch fresh posts from backend on component mount
   useEffect(() => {
-    setPosts(initialPosts);
-  }, [initialPosts]);
+    const fetchPosts = async () => {
+      try {
+        const response = await axiosInstance.get("/posts/Allposts");
+        console.log("Fetched posts:", response.data);
+        // If response.data is an array, use it directly. Otherwise, check for a posts property.
+        if (Array.isArray(response.data)) {
+          setPosts(response.data);
+        } else if (Array.isArray(response.data.posts)) {
+          setPosts(response.data.posts);
+        } else {
+          setPosts([]); // Fallback to an empty array if data is not in expected format
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        menuOpen &&
-        menuRef.current &&
-        !menuRef.current.contains(event.target)
-      ) {
+      if (menuOpen && menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(null);
       }
     };
@@ -71,18 +81,51 @@ const HomeFeed = () => {
       document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  // const handleLike = async (postId) => {
+  //   if (!postId) {
+  //     console.error("postId is missing!");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await axiosInstance.post(`/posts/like/${postId}`);
+  //     console.log("✅ Like success:", response.data);
+  //     if (response.data?.likesCount !== undefined) {
+  //       setPosts((prevPosts) =>
+  //         prevPosts.map((post) =>
+  //           post._id === postId
+  //             ? { ...post, likesCount: response.data.likesCount }
+  //             : post
+  //         )
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to like the post", error.response?.data || error);
+  //   }
+  // };
+
+
+
   const handleLike = async (postId) => {
     if (!postId) {
       console.error("postId is missing!");
       return;
     }
-
+  
+    // ✅ Pehle frontend par likes count badhao
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === postId
+          ? { ...post, likesCount: (post.likesCount || 0) + 1 }
+          : post
+      )
+    );
+  
     try {
       const response = await axiosInstance.post(`/posts/like/${postId}`);
-
       console.log("✅ Like success:", response.data);
-
+  
       if (response.data?.likesCount !== undefined) {
+        // ✅ Server ka response se update karo
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
             post._id === postId
@@ -92,12 +135,19 @@ const HomeFeed = () => {
         );
       }
     } catch (error) {
-      console.error(
-        "Failed to like the post",
-        error.response?.data || error
+      console.error("❌ Failed to like the post", error.response?.data || error);
+  
+      // ❌ Agar error aaye toh undo frontend increment
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? { ...post, likesCount: Math.max((post.likesCount || 1) - 1, 0) }
+            : post
+        )
       );
     }
   };
+  
 
   const handleDeletePost = async (postId) => {
     try {
@@ -108,21 +158,18 @@ const HomeFeed = () => {
 
       toast.success("Post successfully deleted!", {
         position: "top-right",
-        autoClose: 2000, 
+        autoClose: 2000,
       });
 
       // Redirect to home after deletion
       setTimeout(() => {
-        navigate("/dashboard/home"); // Redirect to home page
+        navigate("/dashboard/home");
       }, 2000);
     } catch (error) {
-      console.error(
-        "Error deleting post:",
-        error.response?.data || error.message
-      );
+      console.error("Error deleting post:", error.response?.data || error.message);
       toast.error("Failed to delete post!", {
         position: "top-right",
-        autoClose: 3000, // 3 seconds
+        autoClose: 3000,
       });
     }
   };
@@ -145,9 +192,7 @@ const HomeFeed = () => {
   return (
     <div className="relative max-h-[700px] w-full shadow-xl overflow-y-auto flex flex-col gap-6 p-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg scrollbar-hide">
       {posts?.map((post) => {
-        // Use the helper function instead of useMemo inside map
         const profilePic = getProfilePic(post.user);
-
         return (
           <div
             key={post._id}
@@ -222,7 +267,7 @@ const HomeFeed = () => {
                 className="flex items-center gap-1"
               >
                 <Heart className="w-5 h-5 text-red-500" />
-                {post.likesCount || 0}
+                 {post.likesCount || 0}
               </button>
               <button
                 className="hover:text-blue-500 flex items-center gap-1"
@@ -252,11 +297,10 @@ const HomeFeed = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
-
             {likeList.length > 0 ? (
               likeList.map((user, index) => (
                 <div
-                  key={user._id || index} // Agar _id na mile toh index use karo
+                  key={user._id || index}
                   className="flex items-center gap-3 p-2 border-b"
                 >
                   <img
@@ -282,4 +326,3 @@ const HomeFeed = () => {
 };
 
 export default HomeFeed;
-
