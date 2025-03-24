@@ -251,6 +251,11 @@ const Register = () => {
             >
               {loading ? "Registering..." : "Register"}
             </button>
+           <div className="flex items-center justify-center gap-3 mt-4">
+            <h3 className="text-white opacity-0.8"> Have an account?</h3>
+            <a className="text-blue-400" href="/login">Sign in</a>
+
+           </div>
           </form>
         </div>
       </div>

@@ -93,10 +93,10 @@ const UserProfile = () => {
             <strong>{user.posts?.length || 0}</strong> Posts
           </span>
           <span>
-            <strong>{user.followers?.length || 0}</strong> Followers
+            <strong>{user.stats?.followers|| 0}</strong> Followers
           </span>
           <span>
-            <strong>{user.following?.length || 0}</strong> Following
+            <strong>{user.stats?.following || 0}</strong> Following
           </span>
         </div>
         <button

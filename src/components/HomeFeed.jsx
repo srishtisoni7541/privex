@@ -1,11 +1,10 @@
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { Heart, Eye, X, MoreVertical } from "lucide-react";
 import axiosInstance from "../../utils/axios";
 import { useNavigate } from "react-router-dom"; // Using useNavigate for redirection
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
+import CommentSection from "./Commentsection";
 
 // Format date function
 const formatDate = (dateString) => {
@@ -16,7 +15,6 @@ const formatDate = (dateString) => {
     hour12: true,
   });
 };
-
 
 // Retrieve logged-in user from localStorage
 const loggedInUser = JSON.parse(localStorage.getItem("loggedIn-user")) || {};
@@ -48,6 +46,7 @@ const HomeFeed = () => {
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [menuOpen, setMenuOpen] = useState(null);
   const menuRef = useRef(null);
+  const [showComments, setShowComments] = useState(false);
 
   // Fetch fresh posts from backend on component mount
   useEffect(() => {
@@ -72,45 +71,24 @@ const HomeFeed = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (menuOpen && menuRef.current && !menuRef.current.contains(event.target)) {
+      if (
+        menuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
         setMenuOpen(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
-
-  // const handleLike = async (postId) => {
-  //   if (!postId) {
-  //     console.error("postId is missing!");
-  //     return;
-  //   }
-  //   try {
-  //     const response = await axiosInstance.post(`/posts/like/${postId}`);
-  //     console.log("✅ Like success:", response.data);
-  //     if (response.data?.likesCount !== undefined) {
-  //       setPosts((prevPosts) =>
-  //         prevPosts.map((post) =>
-  //           post._id === postId
-  //             ? { ...post, likesCount: response.data.likesCount }
-  //             : post
-  //         )
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to like the post", error.response?.data || error);
-  //   }
-  // };
-
-
 
   const handleLike = async (postId) => {
     if (!postId) {
       console.error("postId is missing!");
       return;
     }
-  
+
     // ✅ Pehle frontend par likes count badhao
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -119,11 +97,11 @@ const HomeFeed = () => {
           : post
       )
     );
-  
+
     try {
       const response = await axiosInstance.post(`/posts/like/${postId}`);
       console.log("✅ Like success:", response.data);
-  
+
       if (response.data?.likesCount !== undefined) {
         // ✅ Server ka response se update karo
         setPosts((prevPosts) =>
@@ -135,8 +113,11 @@ const HomeFeed = () => {
         );
       }
     } catch (error) {
-      console.error("❌ Failed to like the post", error.response?.data || error);
-  
+      console.error(
+        "❌ Failed to like the post",
+        error.response?.data || error
+      );
+
       // ❌ Agar error aaye toh undo frontend increment
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
@@ -147,7 +128,6 @@ const HomeFeed = () => {
       );
     }
   };
-  
 
   const handleDeletePost = async (postId) => {
     try {
@@ -166,7 +146,10 @@ const HomeFeed = () => {
         navigate("/dashboard/home");
       }, 2000);
     } catch (error) {
-      console.error("Error deleting post:", error.response?.data || error.message);
+      console.error(
+        "Error deleting post:",
+        error.response?.data || error.message
+      );
       toast.error("Failed to delete post!", {
         position: "top-right",
         autoClose: 3000,
@@ -267,7 +250,7 @@ const HomeFeed = () => {
                 className="flex items-center gap-1"
               >
                 <Heart className="w-5 h-5 text-red-500" />
-                 {post.likesCount || 0}
+                {post.likesCount || 0}
               </button>
               <button
                 className="hover:text-blue-500 flex items-center gap-1"
@@ -275,6 +258,33 @@ const HomeFeed = () => {
               >
                 <Eye className="w-5 h-5" /> See Likes
               </button>
+              {/* <button onClick={() => setShowComments(!showComments)}>
+                Comment
+              </button>
+              {showComments && <CommentSection />} */}
+
+              <button
+                onClick={() =>
+                  setShowComments((prev) =>
+                    prev === post._id ? null : post._id
+                  )
+                }
+              >
+                Comment
+              </button>
+
+              <AnimatePresence>
+                {showComments === post._id && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CommentSection postId={post._id} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         );
