@@ -18,7 +18,8 @@ const formatDate = (dateString) => {
 
 // Retrieve logged-in user from localStorage
 const loggedInUser = JSON.parse(localStorage.getItem("loggedIn-user")) || {};
-console.log(loggedInUser.user?._id);
+
+
 
 // Helper function to convert buffer to Base64 safely
 const bufferToBase64 = (buffer) => {
@@ -171,6 +172,31 @@ const HomeFeed = () => {
       console.error("Failed to fetch likes", error);
     }
   };
+  const SavedPostHandler = async (postId) => {
+    console.log("Sending request to save post:", postId);
+
+    if (!postId) {
+      console.error("Post ID is missing!");
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post(`/posts/save/${postId}`);
+      console.log("✅ Post saved successfully:", response.data);
+
+      toast.success("Post saved!", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    } catch (error) {
+      console.error("❌ Failed to save post", error.response?.data || error);
+
+      toast.error("Failed to save post!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
 
   return (
     <div className="relative max-h-[700px] w-full shadow-xl overflow-y-auto flex flex-col gap-6 p-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg scrollbar-hide">
@@ -216,9 +242,13 @@ const HomeFeed = () => {
                       <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
                         📤 Share
                       </button>
-                      <button className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left">
+                      <button
+                        onClick={() => SavedPostHandler(post._id)}
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                      >
                         💾 Save
                       </button>
+
                       {loggedInUser?.user?._id === post.user?._id && (
                         <button
                           onClick={() => handleDeletePost(post._id)}
@@ -258,11 +288,6 @@ const HomeFeed = () => {
               >
                 <Eye className="w-5 h-5" /> See Likes
               </button>
-              {/* <button onClick={() => setShowComments(!showComments)}>
-                Comment
-              </button>
-              {showComments && <CommentSection />} */}
-
               <button
                 onClick={() =>
                   setShowComments((prev) =>
